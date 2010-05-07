@@ -77,6 +77,22 @@ case class Function(weight:Double,
   }
 }
 
+case class Flame(coords:(Double,Double,Double,Double), functions:scala.List[Function]) {
+  
+  def pickFunctionAndIterate(r:Double,p:Point):Point = {
+    val rd = r*functions.last.weight
+    //println("rd: " + rd)
+    for (f <- functions) {
+      //println("f: " + f.weight)
+      if (rd <= f.weight) {
+        return f.iterate(p)
+      }
+    }
+    throw new Exception("Problem with function weights")
+  }
+  
+}
+
 class MyPanel extends JPanel {
   override def paintComponent(g:Graphics):Unit = {
     super.paintComponent(g)
@@ -86,45 +102,38 @@ class MyPanel extends JPanel {
   }
   
   def render(g:Graphics, xres:Int, yres:Int){
-    var values = new Array[Array[Int]](500,500)
-    val min_x = -10
-    val max_x = 10
-    val min_y = -10
-    val max_y = 10
-    val range_x = max_x - min_x
-    val range_y = max_y - min_y
-    val r = new Random()
-    var count = 0
-    var p = Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y)
-    while (count < 40000020) {
-    
+
+    val flame = Flame((-2,3,-2.5,2.5),
+		  scala.List[Function] ( //Function list must be sorted by weights right now
+		  Function(.188,
+			   AffineTransform(0.685796, -0.203333, 0.043371, 0.480696, 0.008717, -0.030978),
+			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),		  
+		  Function(.423,
+			   AffineTransform(0.504957, -0.062872, 0.134236, 0.505966, 1.256077, -0.733679),
+			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),
+		  Function(1.323,
+			   AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
+			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
+
     /*
-      val min_x = -2
-      val max_x = 3
-      val min_y = -2.5
-      val max_y = 2.5
-      val f3 = Function(.9,
-			AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
-			scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))
-      val f2 = Function(.235,
-			AffineTransform(0.504957, -0.062872, 0.134236, 0.505966, 1.256077, -0.733679),
-			scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001)))
-      val f1 = Function(.188,
-			AffineTransform(0.685796, -0.203333, 0.043371, 0.480696, 0.008717, -0.030978),
-			scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001)))
-    */
-    
     val f2 = Function(1.72,
 		      AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
 		      scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))
     val f1 = Function(0.026,
 		      AffineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
 		      scala.List[Variation](new Linear(0.772), new Spherical(3.766), new Horseshoe(-0.203)))
-    
-      p = r.nextDouble()*1.746 match {
-	case x if x <= .026 => f1.iterate(p)
-	case _ => f2.iterate(p)
-      }
+    */
+
+    var values = new Array[Array[Int]](500,500)
+    val (min_x, max_x, min_y, max_y) = flame.coords
+    val range_x = max_x - min_x
+    val range_y = max_y - min_y
+    val r = new Random()
+    var count = 0
+    var p = Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y)
+    while (count < 100020) {
+
+      p = flame.pickFunctionAndIterate(r.nextDouble,p)
 
       if (count > 20) {
 	val pixel_x = Math.round(((p.x - min_x) / range_x) * 500).asInstanceOf[Int]
