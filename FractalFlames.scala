@@ -35,8 +35,8 @@ class Sinusoidal(weight:Double) extends Variation(weight) {
 
 class Spherical(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
-    val r2 = p.x * p.x + p.y * p.y
-    if (r2 == 0) return Point(0,0)
+    val r2 = p.x * p.x + p.y * p.y + 1e-6
+    //if (r2 == 0) return p
     Point(p.x / r2,p.y / r2)
   }
 }
@@ -64,6 +64,15 @@ class Horseshoe(weight:Double) extends Variation(weight) {
   }
 }
 
+class Power(weight:Double) extends Variation(weight) {
+  def calculate(p:Point):Point = {
+    
+    val theta = Math.atan2(p.x,p.y + 1e-6)
+    val rst = Math.pow(Math.sqrt(p.x*p.x + p.y*p.y), Math.sin(theta))
+    Point(Math.cos(theta), Math.sin(theta))
+  }
+}
+
 class Linear(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = p
 }
@@ -81,9 +90,7 @@ case class Flame(coords:(Double,Double,Double,Double), functions:scala.List[Func
   
   def pickFunctionAndIterate(r:Double,p:Point):Point = {
     val rd = r*functions.last.weight
-    //println("rd: " + rd)
     for (f <- functions) {
-      //println("f: " + f.weight)
       if (rd <= f.weight) {
         return f.iterate(p)
       }
@@ -101,8 +108,21 @@ class MyPanel extends JPanel {
     println(System.currentTimeMillis() - startTime)
   }
   
-  def render(g:Graphics, xres:Int, yres:Int){
+  def render(g:Graphics, xres:Int, yres:Int) {
 
+    val flame = Flame((-12,12,-12,12),
+		  scala.List[Function] ( //Function list must be sorted by weights right now
+		  Function(.125,
+			   AffineTransform(-0.070416, -0.335019, -0.416769, 0.031453, -0.170371, -0.311659),
+			   scala.List[Variation](new Linear(1.772),new Spherical(5.052), new Power(.25))),		  
+		  Function(.5,
+			   AffineTransform(-0.227785, -0.380106, 0.594681, 0.057683, 0, 0),
+			   scala.List[Variation](new Linear(1))),
+		  Function(.875,
+			   AffineTransform(0.622799, 0.111881, 0.211325, 0.799623, -0.21504, -0.285111),
+			   scala.List[Variation](new Linear(1.113), new Spherical(7.5), new Power(.25)))))
+
+/*
     val flame = Flame((-2,3,-2.5,2.5),
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(.188,
@@ -114,7 +134,7 @@ class MyPanel extends JPanel {
 		  Function(1.323,
 			   AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
 			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
-
+*/
     /*
     val f2 = Function(1.72,
 		      AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
@@ -131,7 +151,7 @@ class MyPanel extends JPanel {
     val r = new Random()
     var count = 0
     var p = Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y)
-    while (count < 100020) {
+    while (count < 5000020) {
 
       p = flame.pickFunctionAndIterate(r.nextDouble,p)
 
