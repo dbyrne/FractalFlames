@@ -87,13 +87,13 @@ case class Function(weight:Double,
   }
 }
 
-case class Flame(coords:(Double,Double,Double,Double), functions:scala.List[Function]) {
-  
-  def pickFunctionAndIterate(r:Double,p:Point,color:Double):(Point,Double) = {
-    val rd = r*functions.last.weight
+case class Flame(coords:(Double,Double,Double,Double), gamma:Double, functions:scala.List[Function]) {
+  val r = new Random()  
+  def pickFunctionAndIterate(p:Point,c:Double):(Point,Double) = {
+    val rd = r.nextDouble()*functions.last.weight
     for (f <- functions) {
       if (rd <= f.weight) {
-        return (f.iterate(p),(color+f.colorWeight)/2)
+        return (f.iterate(p),(c+f.colorWeight)/2.0)
       }
     }
     throw new Exception("Problem with function weights")
@@ -110,99 +110,123 @@ class MyPanel extends JPanel {
   }
   
   def render(g:Graphics, xres:Int, yres:Int) {
+
+      val flame = Flame((-.5,1.5,-1.5,.5),
+		  4,
+		  scala.List[Function] ( //Function list must be sorted by weights right now
+		  Function(0.2155,
+			   1.0,
+			   AffineTransform(0.22590188704331657, 0.1381586175641758, -0.1381586175641758, 0.22590188704331657, 0.16728220092141166, -0.02117443969466626),
+			   scala.List[Variation](new Linear(1))),		  
+		  Function(1.0,
+			   0.25,
+			   AffineTransform(0.2848782511884477, 0.9577355012682768, -0.9668702316000889, 0.13050167874329055, 0.026213727563908717, -0.8868378321884305),
+			   scala.List[Variation](new Linear(1)))))
+  
   /*
     val flame = Flame((-12,12,-12,12),
+		  2.38,
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(.125,
-			   1.0,
+			   0.0,
 			   AffineTransform(-0.070416, -0.335019, -0.416769, 0.031453, -0.170371, -0.311659),
 			   scala.List[Variation](new Linear(1.772),new Spherical(5.052), new Power(.25))),		  
-		  Function(.5,
-			   .5,
+		  Function(.625,
+			   0.273,
 			   AffineTransform(-0.227785, -0.380106, 0.594681, 0.057683, 0, 0),
 			   scala.List[Variation](new Linear(1))),
-		  Function(.875,
-			   3.0,
+		  Function(1.5,
+			   0.208,
 			   AffineTransform(0.622799, 0.111881, 0.211325, 0.799623, -0.21504, -0.285111),
 			   scala.List[Variation](new Linear(1.113), new Spherical(7.5), new Power(.25)))))
+  
   */
-
+  /*
     val flame = Flame((-2,3,-2.5,2.5),
+		  2.3,
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(.188,
-			   1.0,
+			   0.782,
 			   AffineTransform(0.685796, -0.203333, 0.043371, 0.480696, 0.008717, -0.030978),
 			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),		  
 		  Function(.423,
-			   1.0,
+			   0.0,
 			   AffineTransform(0.504957, -0.062872, 0.134236, 0.505966, 1.256077, -0.733679),
 			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),
 		  Function(1.323,
 			   1.0,
 			   AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
 			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
-
+    */
+    
     /*
-    val f2 = Function(1.72,
-		      AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
-		      scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))
-    val f1 = Function(0.026,
-		      AffineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
-		      scala.List[Variation](new Linear(0.772), new Spherical(3.766), new Horseshoe(-0.203)))
+    val flame = Flame((-4.5,5.5,-6.5,3.5),
+		  2.2,
+		  scala.List[Function] ( //Function list must be sorted by weights right now
+		  Function(0.026,
+			   0.15,
+			   AffineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
+			   scala.List[Variation](new Linear(0.772), new Spherical(3.766), new Horseshoe(-0.203))),
+		  Function(1.746,
+			   1.0,
+			   AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
+			   scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))))
     */
 
-    var values = new Array[Array[Double]](500,500)
-    val (min_x, max_x, min_y, max_y) = flame.coords
-    val range_x = max_x - min_x
-    val range_y = max_y - min_y
+    var values = new Array[Array[Array[Double]]](500,500,2)
+    val (minX, maxX, minY, maxY) = flame.coords
+    val rangeX = maxX - minX
+    val rangeY = maxY - minY
     val r = new Random()
     var count = 0
-    var p = (Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y),r.nextDouble())
-    while (count < 100000020) {
+    var p = (Point(r.nextDouble * rangeX + minX, r.nextDouble  * rangeY + minY),r.nextDouble)
+    while (count < 5000020) {
 
-      p = flame.pickFunctionAndIterate(r.nextDouble,p._1,p._2)
+      p = flame.pickFunctionAndIterate(p._1,p._2)
 
       if (count > 20) {
-	val pixel_x = Math.round(((p._1.x - min_x) / range_x) * 500).asInstanceOf[Int]
-	val pixel_y = Math.round(((p._1.y - min_y) / range_y) * 500).asInstanceOf[Int]
-	if (pixel_x < 500 && pixel_x > 0 && pixel_y < 500 && pixel_y > 0) {
-	  values(pixel_x)(pixel_y) += p._2
+	val pixelX = Math.round(((p._1.x - minX) / rangeX) * 500).asInstanceOf[Int]
+	val pixelY = Math.round(((p._1.y - minY) / rangeY) * 500).asInstanceOf[Int]
+	if (pixelX < 500 && pixelX > 0 && pixelY < 500 && pixelY > 0) {
+	  values(pixelX)(pixelY)(0) += 1 //Pixel Density
+	  values(pixelX)(pixelY)(1) = p._2 //(values(pixelX)(pixelY)(1) + p._2) / 2.0 //Pixel Color
 	}
       }
       count += 1
     }
     val colors = calculateColors()
     
-    
-
-
-
-    var valueList = new Array[Double](250000)
-    var ci = 0
+    var max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      valueList(ci) = values(c)(r)
-      ci += 1
+      values(c)(r)(0) = Math.log(values(c)(r)(0)) //log of the density
+      if (values(c)(r)(0) > max) {
+        max = values(c)(r)(0)
+      }
     }
-    println("Value list accumulated")
-    scala.util.Sorting.quickSort(valueList)
-    println("Value list sorted")
-    val histogram = new scala.collection.mutable.HashMap[Double, Int]
-    ci = 0
-    for (v <- valueList) {
-      histogram += v -> ci
-      ci += 1
+
+    for (r <- 0 until 500; c <- 0 until 500) {
+      values(c)(r)(0) = values(c)(r)(0) / max //replace log density with alpha values
     }
     
-    val size = histogram.size
-    println("Histogram size: " + size)
+    println(max)
+    max = 0.0
+    for (r <- 0 until 500; c <- 0 until 500) {
+      val colInd = values(c)(r)(1) * Math.pow(values(c)(r)(0),1.0/flame.gamma) 
+      if (colInd > max) max = colInd
+    }
+    
     
     for (r <- 0 until 500; c <- 0 until 500) {
-      val col_ind = Math.round( (histogram( values(c)(r) ).asInstanceOf[Double] / ci) * 1019 ).asInstanceOf[Int]
-      g.setColor (colors(col_ind))
+      val colInd = Math.round(((values(c)(r)(1) * Math.pow(values(c)(r)(0),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
+      if (colInd > 0)
+        g.setColor(colors(colInd))
+      else
+        g.setColor(Color.BLACK)
       g.drawLine(c,r,c,r)
     }
   }
   def calculateColors(): Array[Color]= {
+  
   /*
   val maxColors = 1020
     val colors = new Array[Color](maxColors)
@@ -222,7 +246,6 @@ class MyPanel extends JPanel {
     }
     colors 
   */
-  
   
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
