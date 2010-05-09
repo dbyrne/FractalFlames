@@ -78,6 +78,7 @@ class Linear(weight:Double) extends Variation(weight) {
 }
 
 case class Function(weight:Double,
+		    colorWeight:Double,
 		    affineTransform:AffineTransform,
 		    variations:scala.List[Variation]) {
   def iterate(p:Point):Point = {
@@ -88,11 +89,11 @@ case class Function(weight:Double,
 
 case class Flame(coords:(Double,Double,Double,Double), functions:scala.List[Function]) {
   
-  def pickFunctionAndIterate(r:Double,p:Point):Point = {
+  def pickFunctionAndIterate(r:Double,p:Point,color:Double):(Point,Double) = {
     val rd = r*functions.last.weight
     for (f <- functions) {
       if (rd <= f.weight) {
-        return f.iterate(p)
+        return (f.iterate(p),(color+f.colorWeight)/2)
       }
     }
     throw new Exception("Problem with function weights")
@@ -109,32 +110,38 @@ class MyPanel extends JPanel {
   }
   
   def render(g:Graphics, xres:Int, yres:Int) {
-
+  /*
     val flame = Flame((-12,12,-12,12),
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(.125,
+			   1.0,
 			   AffineTransform(-0.070416, -0.335019, -0.416769, 0.031453, -0.170371, -0.311659),
 			   scala.List[Variation](new Linear(1.772),new Spherical(5.052), new Power(.25))),		  
 		  Function(.5,
+			   .5,
 			   AffineTransform(-0.227785, -0.380106, 0.594681, 0.057683, 0, 0),
 			   scala.List[Variation](new Linear(1))),
 		  Function(.875,
+			   3.0,
 			   AffineTransform(0.622799, 0.111881, 0.211325, 0.799623, -0.21504, -0.285111),
 			   scala.List[Variation](new Linear(1.113), new Spherical(7.5), new Power(.25)))))
+  */
 
-/*
     val flame = Flame((-2,3,-2.5,2.5),
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(.188,
+			   1.0,
 			   AffineTransform(0.685796, -0.203333, 0.043371, 0.480696, 0.008717, -0.030978),
 			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),		  
 		  Function(.423,
+			   1.0,
 			   AffineTransform(0.504957, -0.062872, 0.134236, 0.505966, 1.256077, -0.733679),
 			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),
 		  Function(1.323,
+			   1.0,
 			   AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
 			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
-*/
+
     /*
     val f2 = Function(1.72,
 		      AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
@@ -144,22 +151,22 @@ class MyPanel extends JPanel {
 		      scala.List[Variation](new Linear(0.772), new Spherical(3.766), new Horseshoe(-0.203)))
     */
 
-    var values = new Array[Array[Int]](500,500)
+    var values = new Array[Array[Double]](500,500)
     val (min_x, max_x, min_y, max_y) = flame.coords
     val range_x = max_x - min_x
     val range_y = max_y - min_y
     val r = new Random()
     var count = 0
-    var p = Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y)
-    while (count < 5000020) {
+    var p = (Point(r.nextDouble() * range_x + min_x, r.nextDouble() * range_y + min_y),r.nextDouble())
+    while (count < 100000020) {
 
-      p = flame.pickFunctionAndIterate(r.nextDouble,p)
+      p = flame.pickFunctionAndIterate(r.nextDouble,p._1,p._2)
 
       if (count > 20) {
-	val pixel_x = Math.round(((p.x - min_x) / range_x) * 500).asInstanceOf[Int]
-	val pixel_y = Math.round(((p.y - min_y) / range_y) * 500).asInstanceOf[Int]
+	val pixel_x = Math.round(((p._1.x - min_x) / range_x) * 500).asInstanceOf[Int]
+	val pixel_y = Math.round(((p._1.y - min_y) / range_y) * 500).asInstanceOf[Int]
 	if (pixel_x < 500 && pixel_x > 0 && pixel_y < 500 && pixel_y > 0) {
-	  values(pixel_x)(pixel_y) += 1
+	  values(pixel_x)(pixel_y) += p._2
 	}
       }
       count += 1
@@ -170,7 +177,7 @@ class MyPanel extends JPanel {
 
 
 
-    var valueList = new Array[Int](250000)
+    var valueList = new Array[Double](250000)
     var ci = 0
     for (r <- 0 until 500; c <- 0 until 500) {
       valueList(ci) = values(c)(r)
@@ -179,7 +186,7 @@ class MyPanel extends JPanel {
     println("Value list accumulated")
     scala.util.Sorting.quickSort(valueList)
     println("Value list sorted")
-    val histogram = new scala.collection.mutable.HashMap[Int, Int]
+    val histogram = new scala.collection.mutable.HashMap[Double, Int]
     ci = 0
     for (v <- valueList) {
       histogram += v -> ci
@@ -205,7 +212,7 @@ class MyPanel extends JPanel {
     }
     colors 
   */
-  
+  /*
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
@@ -214,9 +221,9 @@ class MyPanel extends JPanel {
       colors(i) = new Color(color,color,color)
     }
     colors 
+  */
   
   
-  /*
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
@@ -230,7 +237,7 @@ class MyPanel extends JPanel {
 			    Math.round(blue).asInstanceOf[Int])
     }
     colors
-  */
+  
   }
   
 }
