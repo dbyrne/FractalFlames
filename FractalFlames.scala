@@ -1,5 +1,5 @@
 import scala.swing._
-import java.awt._
+import java.awt.Graphics
 import javax.swing._
 import scala.util.Random
 
@@ -30,20 +30,19 @@ case class AffineTransform(a:Double,b:Double,c:Double,d:Double,e:Double,f:Double
 }
 
 class Sinusoidal(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = Point(Math.sin(p.x),Math.sin(p.y))
+  def calculate(p:Point):Point = Point(math.sin(p.x),math.sin(p.y))
 }
 
 class Spherical(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
     val r2 = p.x * p.x + p.y * p.y + 1e-6
-    //if (r2 == 0) return p
     Point(p.x / r2,p.y / r2)
   }
 }
 
 class Fisheye(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
-    val r_comp = 2 / Math.sqrt(p.x * p.x + p.y * p.y)       
+    val r_comp = 2 / math.sqrt(p.x * p.x + p.y * p.y)       
     Point(r_comp * p.y, r_comp * p.x) //order of x and y is reversed
   }
 }
@@ -51,15 +50,15 @@ class Fisheye(weight:Double) extends Variation(weight) {
 class Swirl(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
     val r2 = p.x * p.x + p.y * p.y
-    val sr = Math.sin(r2);
-    val cr = Math.cos(r2);
+    val sr = math.sin(r2);
+    val cr = math.cos(r2);
     Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y)
   }
 }
 
 class Horseshoe(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
-    val recip_r = 1.0 / Math.sqrt(p.x * p.x + p.y * p.y)
+    val recip_r = 1.0 / math.sqrt(p.x * p.x + p.y * p.y)
     Point(recip_r * (p.x * p.x + p.y * p.y), recip_r * (2 * p.x * p.y))
   }
 }
@@ -67,9 +66,9 @@ class Horseshoe(weight:Double) extends Variation(weight) {
 class Power(weight:Double) extends Variation(weight) {
   def calculate(p:Point):Point = {
     
-    val theta = Math.atan2(p.x,p.y + 1e-6)
-    val rst = Math.pow(Math.sqrt(p.x*p.x + p.y*p.y), Math.sin(theta))
-    Point(Math.cos(theta), Math.sin(theta))
+    val theta = math.atan2(p.x,p.y + 1e-6)
+    val rst = math.pow(math.sqrt(p.x*p.x + p.y*p.y), math.sin(theta))
+    Point(math.cos(theta), math.sin(theta))
   }
 }
 
@@ -173,7 +172,7 @@ class MyPanel extends JPanel {
 			   scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))))
     */
 
-    var values = new Array[Array[Array[Double]]](500,500,2)
+    var values = Array.ofDim[Double](500,500,2)
     val (minX, maxX, minY, maxY) = flame.coords
     val rangeX = maxX - minX
     val rangeY = maxY - minY
@@ -185,8 +184,8 @@ class MyPanel extends JPanel {
       p = flame.pickFunctionAndIterate(p._1,p._2)
 
       if (count > 20) {
-	val pixelX = Math.round(((p._1.x - minX) / rangeX) * 500).asInstanceOf[Int]
-	val pixelY = Math.round(((p._1.y - minY) / rangeY) * 500).asInstanceOf[Int]
+	val pixelX = math.round(((p._1.x - minX) / rangeX) * 500).asInstanceOf[Int]
+	val pixelY = math.round(((p._1.y - minY) / rangeY) * 500).asInstanceOf[Int]
 	if (pixelX < 500 && pixelX > 0 && pixelY < 500 && pixelY > 0) {
 	  values(pixelX)(pixelY)(0) += 1 //Pixel Density
 	  values(pixelX)(pixelY)(1) = p._2 //(values(pixelX)(pixelY)(1) + p._2) / 2.0 //Pixel Color
@@ -198,7 +197,7 @@ class MyPanel extends JPanel {
     
     var max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      values(c)(r)(0) = Math.log(values(c)(r)(0)) //log of the density
+      values(c)(r)(0) = math.log(values(c)(r)(0)) //log of the density
       if (values(c)(r)(0) > max) {
         max = values(c)(r)(0)
       }
@@ -211,17 +210,14 @@ class MyPanel extends JPanel {
     println(max)
     max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = values(c)(r)(1) * Math.pow(values(c)(r)(0),1.0/flame.gamma) 
+      val colInd = values(c)(r)(1) * math.pow(values(c)(r)(0),1.0/flame.gamma) 
       if (colInd > max) max = colInd
     }
     
     
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = Math.round(((values(c)(r)(1) * Math.pow(values(c)(r)(0),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
-      if (colInd > 0)
-        g.setColor(colors(colInd))
-      else
-        g.setColor(Color.BLACK)
+      val colInd = math.round(((values(c)(r)(1) * math.pow(values(c)(r)(0),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
+      g.setColor(colors(colInd))
       g.drawLine(c,r,c,r)
     }
   }
@@ -231,7 +227,7 @@ class MyPanel extends JPanel {
   val maxColors = 1020
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
-      val color = Math.round(i*(255.0/maxColors)).asInstanceOf[Int]
+      val color = math.round(i*(255.0/maxColors)).asInstanceOf[Int]
       colors(i) = new Color(color,color,color)
     }
     colors 
@@ -241,7 +237,7 @@ class MyPanel extends JPanel {
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
       val value = i%510
-      val color = Math.abs(255-value)
+      val color = math.abs(255-value)
       colors(i) = new Color(color,color,color)
     }
     colors 
@@ -249,15 +245,16 @@ class MyPanel extends JPanel {
   
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
-    for (i <- 0 to maxColors-1) {
-      val data = 2.0 * Math.Pi * (i / 1020.0)
-      val red = (Math.sin(data) * 127.0) + 127.0
-      val green = (Math.cos(data) * 127.0) + 127.0
-      val blue = (-((Math.sin(data) + Math.cos(data)) * .707) * 127.0) + 127.0;
+    colors(0) = new Color(0,0,0)
+    for (i <- 1 to maxColors-1) {
+      val data = 2.0 * math.Pi * (i / 1020.0)
+      val red = (math.sin(data) * 127.0) + 127.0
+      val green = (math.cos(data) * 127.0) + 127.0
+      val blue = (-((math.sin(data) + math.cos(data)) * .707) * 127.0) + 127.0;
       
-      colors(i) = new Color(Math.round(red).asInstanceOf[Int],
-			    Math.round(green).asInstanceOf[Int],
-			    Math.round(blue).asInstanceOf[Int])
+      colors(i) = new Color(math.round(red).asInstanceOf[Int],
+			    math.round(green).asInstanceOf[Int],
+			    math.round(blue).asInstanceOf[Int])
     }
     colors
   
