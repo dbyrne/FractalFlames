@@ -18,74 +18,22 @@ object FractalFlames {
 
 case class Point(x:Double,y:Double) {
   def +(p:Point):Point = Point(p.x + x, p.y + y)
-}
-
-abstract class Variation(val weight:Double) {
-  def apply(p:Point):Point = {
-    val tp = calculate(p)
-    Point(weight * tp.x,weight * tp.y)
-  }
-  def calculate(p:Point):Point
+  def *(d:Double):Point = Point(x * d, y * d)
+  lazy val r = math.sqrt(x * x + y * y)
+  lazy val r2 = x * x + y * y
 }
 
 case class AffineTransform(a:Double,b:Double,c:Double,d:Double,e:Double,f:Double) {
   def apply(p:Point):Point = Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
 }
 
-class Sinusoidal(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = Point(math.sin(p.x),math.sin(p.y))
-}
-
-class Spherical(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = {
-    val r2 = p.x * p.x + p.y * p.y + 1e-6
-    Point(p.x / r2,p.y / r2)
-  }
-}
-
-class Fisheye(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = {
-    val r_comp = 2 / math.sqrt(p.x * p.x + p.y * p.y)       
-    Point(r_comp * p.y, r_comp * p.x) //order of x and y is reversed
-  }
-}
-
-class Swirl(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = {
-    val r2 = p.x * p.x + p.y * p.y
-    val sr = math.sin(r2);
-    val cr = math.cos(r2);
-    Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y)
-  }
-}
-
-class Horseshoe(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = {
-    val recip_r = 1.0 / math.sqrt(p.x * p.x + p.y * p.y)
-    Point(recip_r * (p.x * p.x + p.y * p.y), recip_r * (2 * p.x * p.y))
-  }
-}
-
-class Power(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = {
-    
-    val theta = math.atan2(p.x,p.y + 1e-6)
-    val rst = math.pow(math.sqrt(p.x*p.x + p.y*p.y), math.sin(theta))
-    Point(math.cos(theta), math.sin(theta))
-  }
-}
-
-class Linear(weight:Double) extends Variation(weight) {
-  def calculate(p:Point):Point = p
-}
-
 case class Function(weight:Double,
 		    colorWeight:Double,
 		    affineTransform:AffineTransform,
-		    variations:scala.List[Variation]) {
+		    variations:scala.List[(Point) => Point]) {
   def iterate(p:Point):Point = {
     val tp = affineTransform.apply(p)
-    variations.foldLeft(Point(0,0))(_+_.apply(tp))
+    variations.foldLeft(Point(0,0))(_+_(tp))
   }
 }
 
@@ -113,6 +61,40 @@ class MyPanel extends JPanel {
     render(g, getWidth(), this.getHeight())
     println(System.currentTimeMillis() - startTime)
   }
+ 
+ 
+ def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
+
+def spherical(w:Double)=(p:Point) => {
+  val r2 = p.r2 + 1e-6
+  Point(p.x / r2,p.y / r2) * w
+}
+
+def fisheye(w:Double)=(p:Point) => {
+  val r_comp = 2 / p.r       
+  Point(r_comp * p.y, r_comp * p.x) * w //order of x and y is reversed
+}
+
+def swirl(w:Double)=(p:Point) => {
+    val sr = math.sin(p.r2);
+    val cr = math.cos(p.r2);
+    Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y) * w
+}
+
+def horseshoe(w:Double)=(p:Point) => {
+  val recip_r = 1.0 / p.r
+  Point(p.r2, (2 * p.x * p.y)) * recip_r * w
+}
+
+def power(w:Double)=(p:Point) => {
+  val theta = math.atan2(p.x,p.y)
+  val rst = math.pow(p.r, math.sin(theta))
+  Point(math.cos(theta), math.sin(theta)) * w
+}
+
+def linear(w:Double)=(p:Point) => p * w
+ 
+ 
   
   def render(g:Graphics, xres:Int, yres:Int) {
  
@@ -173,11 +155,11 @@ class MyPanel extends JPanel {
 		  Function(0.026,
 			   0.15,
 			   AffineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
-			   scala.List[Variation](new Linear(0.772), new Spherical(3.766), new Horseshoe(-0.203))),
+			   scala.List(linear(0.772), spherical(3.766), horseshoe(-0.203))),
 		  Function(1.746,
 			   1.0,
 			   AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
-			   scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))))
+			   scala.List(linear(0.001),spherical(8.5),fisheye(0.15)))))
     
     var alpha = Array.ofDim[Double](500,500)
     
@@ -279,5 +261,4 @@ class MyPanel extends JPanel {
     colors
   */
   }
-  
 }
