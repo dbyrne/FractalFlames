@@ -10,6 +10,9 @@ object FractalFlames {
     frame add panel
     frame setSize (500, 500)
     frame setVisible true
+    while (true) {
+      panel.repaint()
+    }
   }
 }
 
@@ -101,6 +104,9 @@ case class Flame(coords:(Double,Double,Double,Double), gamma:Double, functions:s
 }
 
 class MyPanel extends JPanel {
+  
+  var values = Array.ofDim[Double](500,500,2)
+  
   override def paintComponent(g:Graphics):Unit = {
     super.paintComponent(g)
     val startTime = System currentTimeMillis()
@@ -109,7 +115,9 @@ class MyPanel extends JPanel {
   }
   
   def render(g:Graphics, xres:Int, yres:Int) {
-
+ 
+  
+  /*
       val flame = Flame((-.5,1.5,-1.5,.5),
 		  4,
 		  scala.List[Function] ( //Function list must be sorted by weights right now
@@ -121,7 +129,7 @@ class MyPanel extends JPanel {
 			   0.25,
 			   AffineTransform(0.2848782511884477, 0.9577355012682768, -0.9668702316000889, 0.13050167874329055, 0.026213727563908717, -0.8868378321884305),
 			   scala.List[Variation](new Linear(1)))))
-  
+  */
   /*
     val flame = Flame((-12,12,-12,12),
 		  2.38,
@@ -158,8 +166,8 @@ class MyPanel extends JPanel {
 			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
     */
     
-    /*
-    val flame = Flame((-4.5,5.5,-6.5,3.5),
+    
+    val flame = Flame((-6.5,6.5,-6.5,6.5),
 		  2.2,
 		  scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(0.026,
@@ -170,16 +178,16 @@ class MyPanel extends JPanel {
 			   1.0,
 			   AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
 			   scala.List[Variation](new Linear(0.001),new Spherical(8.5),new Fisheye(0.15)))))
-    */
-
-    var values = Array.ofDim[Double](500,500,2)
+    
+    var alpha = Array.ofDim[Double](500,500)
+    
     val (minX, maxX, minY, maxY) = flame.coords
     val rangeX = maxX - minX
     val rangeY = maxY - minY
     val r = new Random()
     var count = 0
     var p = (Point(r.nextDouble * rangeX + minX, r.nextDouble  * rangeY + minY),r.nextDouble)
-    while (count < 5000020) {
+    while (count < 2000020) {
 
       p = flame.pickFunctionAndIterate(p._1,p._2)
 
@@ -197,33 +205,33 @@ class MyPanel extends JPanel {
     
     var max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      values(c)(r)(0) = math.log(values(c)(r)(0)) //log of the density
-      if (values(c)(r)(0) > max) {
-        max = values(c)(r)(0)
+      alpha(c)(r) = math.log(values(c)(r)(0)) //log of the density
+      if (alpha(c)(r) > max) {
+        max = alpha(c)(r)
       }
     }
 
     for (r <- 0 until 500; c <- 0 until 500) {
-      values(c)(r)(0) = values(c)(r)(0) / max //replace log density with alpha values
+      alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
     }
     
     println(max)
     max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = values(c)(r)(1) * math.pow(values(c)(r)(0),1.0/flame.gamma) 
+      val colInd = values(c)(r)(1) * math.pow(alpha(c)(r),1.0/flame.gamma) 
       if (colInd > max) max = colInd
     }
     
     
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = math.round(((values(c)(r)(1) * math.pow(values(c)(r)(0),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
+      val colInd = math.round(((values(c)(r)(1) * math.pow(alpha(c)(r),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
       g.setColor(colors(colInd))
       g.drawLine(c,r,c,r)
     }
   }
   def calculateColors(): Array[Color]= {
   
-  /*
+  
   val maxColors = 1020
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
@@ -231,7 +239,7 @@ class MyPanel extends JPanel {
       colors(i) = new Color(color,color,color)
     }
     colors 
-  */
+  
   /*
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
@@ -241,7 +249,18 @@ class MyPanel extends JPanel {
       colors(i) = new Color(color,color,color)
     }
     colors 
-  */
+  
+  
+  for (int x = 0; x < numberOfColors; x++) {
+    int value = (x%1020)/2;
+    int color;
+    if (value <= 255)
+      color = value;
+    else
+            color = 255-(value-255);
+          colorIntegers[x] = Color.rgb(255-color/3,255-color,128-color/2);
+  }
+  
   
     val maxColors = 1020
     val colors = new Array[Color](maxColors)
@@ -256,8 +275,9 @@ class MyPanel extends JPanel {
 			    math.round(green).asInstanceOf[Int],
 			    math.round(blue).asInstanceOf[Int])
     }
-    colors
   
+    colors
+  */
   }
   
 }
