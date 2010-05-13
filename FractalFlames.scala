@@ -4,6 +4,7 @@ import javax.swing._
 import scala.util.Random
 
 object FractalFlames {
+
   def main(args: Array[String]){
     val frame=new JFrame("Fractal Flames")
     val panel=new MyPanel()
@@ -31,19 +32,31 @@ case class Function(weight:Double,
 		    colorWeight:Double,
 		    affineTransform:AffineTransform,
 		    variations:scala.List[(Point) => Point]) {
+		    
   def iterate(p:Point):Point = {
     val tp = affineTransform.apply(p)
     variations.foldLeft(Point(0,0))(_+_(tp))
   }
+  
 }
 
-case class Flame(coords:(Double,Double,Double,Double), gamma:Double, functions:scala.List[Function]) {
-  val r = new Random()  
-  def pickFunctionAndIterate(p:Point,c:Double):(Point,Double) = {
+case class Flame(coords:(Double,Double,Double,Double),
+		 gamma:Double,
+		 colors:Array[Color],
+		 functions:scala.List[Function]) {
+		 
+  val r = new Random()
+  val (minX,maxX,minY,maxY) = coords
+  val p = Point(r.nextDouble * (maxX-minX) + minX, r.nextDouble * (maxY-minY) + minY)
+  val c = r.nextDouble()
+
+  def points = pickFunctionAndIterate(p,c)
+  def pickFunctionAndIterate(p:Point,c:Double):Stream[(Point,Double)] = {
     val rd = r.nextDouble()*functions.last.weight
     for (f <- functions) {
       if (rd <= f.weight) {
-        return (f.iterate(p),(c+f.colorWeight)/2.0)
+        val n = (f.iterate(p),(c+f.colorWeight)/2.0)
+	return Stream.cons(n, pickFunctionAndIterate(n._1,n._2))
       }
     }
     throw new Exception("Problem with function weights")
@@ -52,106 +65,21 @@ case class Flame(coords:(Double,Double,Double,Double), gamma:Double, functions:s
 }
 
 class MyPanel extends JPanel {
-  
+
   var values = Array.ofDim[Double](500,500,2)
   
   override def paintComponent(g:Graphics):Unit = {
+  
     super.paintComponent(g)
     val startTime = System currentTimeMillis()
     render(g, getWidth(), this.getHeight())
-    println(System.currentTimeMillis() - startTime)
+  
   }
  
- 
- def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
-
-def spherical(w:Double)=(p:Point) => {
-  val r2 = p.r2 + 1e-6
-  Point(p.x / r2,p.y / r2) * w
-}
-
-def fisheye(w:Double)=(p:Point) => {
-  val r_comp = 2 / p.r       
-  Point(r_comp * p.y, r_comp * p.x) * w //order of x and y is reversed
-}
-
-def swirl(w:Double)=(p:Point) => {
-    val sr = math.sin(p.r2);
-    val cr = math.cos(p.r2);
-    Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y) * w
-}
-
-def horseshoe(w:Double)=(p:Point) => {
-  val recip_r = 1.0 / p.r
-  Point(p.r2, (2 * p.x * p.y)) * recip_r * w
-}
-
-def power(w:Double)=(p:Point) => {
-  val theta = math.atan2(p.x,p.y)
-  val rst = math.pow(p.r, math.sin(theta))
-  Point(math.cos(theta), math.sin(theta)) * w
-}
-
-def linear(w:Double)=(p:Point) => p * w
- 
- 
-  
-  def render(g:Graphics, xres:Int, yres:Int) {
- 
-  
-  /*
-      val flame = Flame((-.5,1.5,-1.5,.5),
-		  4,
-		  scala.List[Function] ( //Function list must be sorted by weights right now
-		  Function(0.2155,
-			   1.0,
-			   AffineTransform(0.22590188704331657, 0.1381586175641758, -0.1381586175641758, 0.22590188704331657, 0.16728220092141166, -0.02117443969466626),
-			   scala.List[Variation](new Linear(1))),		  
-		  Function(1.0,
-			   0.25,
-			   AffineTransform(0.2848782511884477, 0.9577355012682768, -0.9668702316000889, 0.13050167874329055, 0.026213727563908717, -0.8868378321884305),
-			   scala.List[Variation](new Linear(1)))))
-  */
-  /*
-    val flame = Flame((-12,12,-12,12),
-		  2.38,
-		  scala.List[Function] ( //Function list must be sorted by weights right now
-		  Function(.125,
-			   0.0,
-			   AffineTransform(-0.070416, -0.335019, -0.416769, 0.031453, -0.170371, -0.311659),
-			   scala.List[Variation](new Linear(1.772),new Spherical(5.052), new Power(.25))),		  
-		  Function(.625,
-			   0.273,
-			   AffineTransform(-0.227785, -0.380106, 0.594681, 0.057683, 0, 0),
-			   scala.List[Variation](new Linear(1))),
-		  Function(1.5,
-			   0.208,
-			   AffineTransform(0.622799, 0.111881, 0.211325, 0.799623, -0.21504, -0.285111),
-			   scala.List[Variation](new Linear(1.113), new Spherical(7.5), new Power(.25)))))
-  
-  */
-  /*
-    val flame = Flame((-2,3,-2.5,2.5),
-		  2.3,
-		  scala.List[Function] ( //Function list must be sorted by weights right now
-		  Function(.188,
-			   0.782,
-			   AffineTransform(0.685796, -0.203333, 0.043371, 0.480696, 0.008717, -0.030978),
-			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),		  
-		  Function(.423,
-			   0.0,
-			   AffineTransform(0.504957, -0.062872, 0.134236, 0.505966, 1.256077, -0.733679),
-			   scala.List[Variation](new Linear(.94),new Spherical(0.0600000000000001))),
-		  Function(1.323,
-			   1.0,
-			   AffineTransform(0.924163, -0.278798, 1.156495, 0.629876, -0.344429, 0.500259),
-			   scala.List[Variation](new Linear(.94), new Spherical(0.0600000000000001)))))
-    */
-    
-    
-    val flame = Flame((-6.5,6.5,-6.5,6.5),
-		  2.2,
-		  scala.List[Function] ( //Function list must be sorted by weights right now
+  val flame = Flame((-6.5,6.5,-6.5,6.5),
+                     2.2,
+		     BlackAndWhite(),
+		     scala.List[Function] ( //Function list must be sorted by weights right now
 		  Function(0.026,
 			   0.15,
 			   AffineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
@@ -160,18 +88,47 @@ def linear(w:Double)=(p:Point) => p * w
 			   1.0,
 			   AffineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
 			   scala.List(linear(0.001),spherical(8.5),fisheye(0.15)))))
-    
+ 
+  def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
+
+  def spherical(w:Double)=(p:Point) => {
+    val r2 = p.r2 + 1e-6
+    Point(p.x / r2,p.y / r2) * w
+  }
+
+  def fisheye(w:Double)=(p:Point) => {
+    val r_comp = 2 / p.r       
+    Point(r_comp * p.y, r_comp * p.x) * w //order of x and y is reversed
+  }
+
+  def swirl(w:Double)=(p:Point) => {
+    val sr = math.sin(p.r2);
+    val cr = math.cos(p.r2);
+    Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y) * w
+  }
+
+  def horseshoe(w:Double)=(p:Point) => {
+    val recip_r = 1.0 / p.r
+    Point(p.r2, (2 * p.x * p.y)) * recip_r * w
+  }
+
+  def power(w:Double)=(p:Point) => {
+    val theta = math.atan2(p.x,p.y)
+    val rst = math.pow(p.r, math.sin(theta))
+    Point(math.cos(theta), math.sin(theta)) * w
+  }
+
+  def linear(w:Double)=(p:Point) => p * w
+  
+  def render(g:Graphics, xres:Int, yres:Int) {
+   
     var alpha = Array.ofDim[Double](500,500)
-    
+ 
     val (minX, maxX, minY, maxY) = flame.coords
     val rangeX = maxX - minX
     val rangeY = maxY - minY
-    val r = new Random()
     var count = 0
-    var p = (Point(r.nextDouble * rangeX + minX, r.nextDouble  * rangeY + minY),r.nextDouble)
-    while (count < 2000020) {
-
-      p = flame.pickFunctionAndIterate(p._1,p._2)
+    for (p <- flame.points.take(2000020)) {
 
       if (count > 20) {
 	val pixelX = math.round(((p._1.x - minX) / rangeX) * 500).asInstanceOf[Int]
@@ -183,7 +140,7 @@ def linear(w:Double)=(p:Point) => p * w
       }
       count += 1
     }
-    val colors = calculateColors()
+    val colors = flame.colors
     
     var max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
@@ -196,69 +153,28 @@ def linear(w:Double)=(p:Point) => p * w
     for (r <- 0 until 500; c <- 0 until 500) {
       alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
     }
-    
-    println(max)
+  
     max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
       val colInd = values(c)(r)(1) * math.pow(alpha(c)(r),1.0/flame.gamma) 
       if (colInd > max) max = colInd
     }
-    
-    
+  
     for (r <- 0 until 500; c <- 0 until 500) {
       val colInd = math.round(((values(c)(r)(1) * math.pow(alpha(c)(r),1.0/flame.gamma))/max)*1019).asInstanceOf[Int]
       g.setColor(colors(colInd))
       g.drawLine(c,r,c,r)
     }
   }
-  def calculateColors(): Array[Color]= {
   
-  
-  val maxColors = 1020
+  def BlackAndWhite(): Array[Color]= {
+    val maxColors = 1020
     val colors = new Array[Color](maxColors)
     for (i <- 0 to maxColors-1) {
       val color = math.round(i*(255.0/maxColors)).asInstanceOf[Int]
       colors(i) = new Color(color,color,color)
     }
-    colors 
-  
-  /*
-    val maxColors = 1020
-    val colors = new Array[Color](maxColors)
-    for (i <- 0 to maxColors-1) {
-      val value = i%510
-      val color = math.abs(255-value)
-      colors(i) = new Color(color,color,color)
-    }
-    colors 
-  
-  
-  for (int x = 0; x < numberOfColors; x++) {
-    int value = (x%1020)/2;
-    int color;
-    if (value <= 255)
-      color = value;
-    else
-            color = 255-(value-255);
-          colorIntegers[x] = Color.rgb(255-color/3,255-color,128-color/2);
-  }
-  
-  
-    val maxColors = 1020
-    val colors = new Array[Color](maxColors)
-    colors(0) = new Color(0,0,0)
-    for (i <- 1 to maxColors-1) {
-      val data = 2.0 * math.Pi * (i / 1020.0)
-      val red = (math.sin(data) * 127.0) + 127.0
-      val green = (math.cos(data) * 127.0) + 127.0
-      val blue = (-((math.sin(data) + math.cos(data)) * .707) * 127.0) + 127.0;
-      
-      colors(i) = new Color(math.round(red).asInstanceOf[Int],
-			    math.round(green).asInstanceOf[Int],
-			    math.round(blue).asInstanceOf[Int])
-    }
-  
     colors
-  */
   }
+  
 }
