@@ -1,3 +1,16 @@
+    val flame = Flame((-6.5,6.5,-6.5,6.5),
+                     2.2,
+                     BlackAndWhite(),
+                     scala.List[Function] ( //Function list must be sorted by weights right now
+                                           Function(0.026,
+                                                    0.15,
+                                                    affineTransform(0.747489, 0.420727, -0.875301, 0.093216, -0.608663, 0.609638),
+                                                    scala.List(linear(0.772), spherical(3.766), horseshoe(-0.203))),
+                                           Function(1.746,
+                                                    1.0,
+                                                    affineTransform(0.97707,0.07041,-0.593528,1.037807,-1.185448,-0.120777),
+                                                    scala.List(linear(0.001),spherical(8.5),fisheye(0.15)))))
+  
   /*
       val flame = Flame((-.5,1.5,-1.5,.5),
 		  4,
@@ -72,20 +85,6 @@
   }
   
   
-    val maxColors = 1020
-    val colors = new Array[Color](maxColors)
-    colors(0) = new Color(0,0,0)
-    for (i <- 1 to maxColors-1) {
-      val data = 2.0 * math.Pi * (i / 1020.0)
-      val red = (math.sin(data) * 127.0) + 127.0
-      val green = (math.cos(data) * 127.0) + 127.0
-      val blue = (-((math.sin(data) + math.cos(data)) * .707) * 127.0) + 127.0;
-      
-      colors(i) = new Color(math.round(red).asInstanceOf[Int],
-			    math.round(green).asInstanceOf[Int],
-			    math.round(blue).asInstanceOf[Int])
-    }
-  
-    colors
+
   */
   }
