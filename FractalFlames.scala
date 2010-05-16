@@ -40,7 +40,7 @@ class MyPanel extends JPanel {
 
   var values = Array.ofDim[Double](500,500,2)
   
-  val flame = pinwheel
+  val flame = perch
   
   override def paintComponent(g:Graphics):Unit = {
   

@@ -21,8 +21,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
   
+  val perch = Flame((-.75,.5,-.85,.40),
+                    4.0,
+                    Rainbow(),
+                    scala.List[Function] (
+                                          Function(0.5,
+                                                   0.0,
+                                                   affineTransform(-0.611536, -0.198789, 0.308349, -0.517899, -0.28474, -0.250627),
+                                                   scala.List(popcorn(1.0,-0.28474,-0.250627),rings(1.0,math.pow(-0.28474,2)))),
+                                          Function(1.0,
+                                                   1.0,
+                                                   affineTransform(0.102329, -0.67052, 0.732627, 0.189097, 0.057882, -0.08797),
+                                                   scala.List(swirl(1.0)))))
+  
   val pinwheel = Flame((-.25,1.25,-.75,.75),
-                        1.0,
+                        4.0,
                         BlackAndWhite(),
                         scala.List[Function] ( //Function list must be sorted by weights right now
                                               Function(0.5,
@@ -78,6 +91,19 @@ object FractalComponents {
     } 
   }
   
+  //dependent on c and f values from affine transform
+  def popcorn(w:Double,e:Double,f:Double)=(p:Point) => {
+    Point(p.x + e * math.sin(math.tan(3 * p.y)),
+          p.y + f * math.sin(math.tan(3 *p.x))) * w
+  }
+  
+  //dependent on c^2 value from affine transform
+  def rings(w:Double, c2:Double)=(p:Point) => {
+    val m = (p.r + c2) % (2 * c2)
+    val i = ((m - c2) + p.r) - (p.r * c2)
+    Point(math.cos(p.arctan2), math.sin(p.arctan2)) * i * w
+  }
+  
   def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
 
   def handkerchief(w:Double)=(p:Point) => {
@@ -124,6 +150,7 @@ object FractalComponents {
       val color = math.round(i*(255.0/maxColors)).asInstanceOf[Int]
       colors(i) = new Color(color,color,color)
     }
+    
     colors
   }
   
