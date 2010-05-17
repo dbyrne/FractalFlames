@@ -40,7 +40,7 @@ class MyPanel extends JPanel {
 
   var values = Array.ofDim[Double](500,500,4)
   
-  val flame = pinwheel
+  val flame = flower
   
   override def paintComponent(g:Graphics):Unit = {
   

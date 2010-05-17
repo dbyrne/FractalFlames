@@ -21,6 +21,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
 
+  val flower = Flame((-2,2,-2.5,1.5),
+		     2.2,
+                     Rainbow(),
+                     scala.List[Function] (
+                                           Function(0.71,
+                                                    0.0,
+                                                    affineTransform(0.271587, -0.62814, 0.743008, 0.90192, 0.15938, 0.165033),
+                                                    scala.List(linear(0.6851911667585093),swirl(0.31480883324149067))),
+                                           Function(1.0,
+                                                    1.0,
+                                                    affineTransform(-0.039407, -0.385973, 0.452706, -0.055322, -0.372491, -0.62311),
+                                                    scala.List(polar(0.35591518143252265),spiral(0.6)))))
+
   val brain = Flame((-3,5,-4,4),
                     2.0,
                     Rainbow(),
@@ -34,7 +47,7 @@ object FractalComponents {
                                                    affineTransform(-0.567588, -0.536166, -0.325195, 0.801476, -0.90069, 1.08108),
                                                    scala.List(linear(.5),spiral(.5)))))
   
-  val perch = Flame((-.75,.5,-.85,.40),
+  val trout = Flame((-.75,.5,-.85,.40),
                     1.0,
                     Rainbow(),
                     scala.List[Function] (
@@ -103,6 +116,8 @@ object FractalComponents {
       throw new Exception("Problem with Function Weights")
     } 
   }
+
+  def polar(w:Double)=(p:Point) => Point(p.arctan2/math.Pi, p.r - 1) * w
 
   def spiral(w:Double)=(p:Point) => {
     val recipR = 1.0 / p.r
