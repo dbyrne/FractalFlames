@@ -40,7 +40,7 @@ class MyPanel extends JPanel {
 
   var values = Array.ofDim[Double](500,500,2)
   
-  val flame = perch
+  val flame = brain
   
   override def paintComponent(g:Graphics):Unit = {
   
@@ -89,9 +89,9 @@ class MyPanel extends JPanel {
       val colInd = values(c)(r)(1) * math.pow(alpha(c)(r), recipGamma) 
       if (colInd > max) max = colInd
     }
-  
+    val maxColorIndex = flame.colors.size - 1
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = math.round(((values(c)(r)(1) * math.pow(alpha(c)(r),recipGamma))/max)*1019).asInstanceOf[Int]
+      val colInd = math.round(((values(c)(r)(1) * math.pow(alpha(c)(r),recipGamma))/max)*maxColorIndex).asInstanceOf[Int]
       g setColor(colors(colInd))
       g drawLine(c,r,c,r)
     }

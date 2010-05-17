@@ -20,13 +20,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 object FractalComponents {
+
+  val brain = Flame((-3,5,-4,4),
+                    4.0,
+                    BlackAndWhite(),
+                    scala.List[Function] (
+                                          Function(0.5,
+                                                   0.0,
+                                                   affineTransform(1.015245, -1.466244, 2.361193, 1.471095, -0.128157, 1.185009),
+                                                   scala.List(linear(.5),spiral(.5))),
+                                          Function(1.0,
+                                                   1.0,
+                                                   affineTransform(-0.567588, -0.536166, -0.325195, 0.801476, -0.90069, 1.08108),
+                                                   scala.List(linear(.5),spiral(.5)))))
   
   val perch = Flame((-.75,.5,-.85,.40),
                     4.0,
                     Rainbow(),
                     scala.List[Function] (
                                           Function(0.5,
-                                                   0.0,
+                                                   1.0,
                                                    affineTransform(-0.611536, -0.198789, 0.308349, -0.517899, -0.28474, -0.250627),
                                                    scala.List(popcorn(1.0,-0.28474,-0.250627),rings(1.0,math.pow(-0.28474,2)))),
                                           Function(1.0,
@@ -90,7 +103,13 @@ object FractalComponents {
       throw new Exception("Problem with Function Weights")
     } 
   }
-  
+
+  def spiral(w:Double)=(p:Point) => {
+    val recipR = 1.0 / p.r
+    Point(math.cos(p.arctan2) + math.sin(p.r),
+          math.sin(p.arctan2) - math.cos(p.r)) * recipR * w
+  }
+
   //dependent on c and f values from affine transform
   def popcorn(w:Double,e:Double,f:Double)=(p:Point) => {
     Point(p.x + e * math.sin(math.tan(3 * p.y)),
@@ -141,6 +160,14 @@ object FractalComponents {
 
   def affineTransform(a:Double,b:Double,c:Double,d:Double,e:Double,f:Double)=(p:Point) => {
     Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
+  }
+  
+  def loadColors(f:String):Array[Color]={
+    var colors = scala.List[Color](new Color(0,0,0))
+    for (l <- io.Source.fromPath("perch.txt").getLines("\n")) {
+      colors = new Color(l.toInt) :: colors
+    }
+    colors.reverse.toArray
   }
   
     def BlackAndWhite(): Array[Color]= {
