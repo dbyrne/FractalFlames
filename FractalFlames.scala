@@ -38,9 +38,9 @@ object FractalFlames {
 
 class MyPanel extends JPanel {
 
-  var values = Array.ofDim[Double](500,500,2)
+  var values = Array.ofDim[Double](500,500,4)
   
-  val flame = brain
+  val flame = pinwheel
   
   override def paintComponent(g:Graphics):Unit = {
   
@@ -57,42 +57,54 @@ class MyPanel extends JPanel {
     val rangeX = maxX - minX
     val rangeY = maxY - minY
     var count = 0
-    
+
+    val colors = flame colors    
+    val maxColorIndex = colors.size - 1
+
     while (count < 1000000) {
       val p = flame.points.next()
       val pixelX = math.round(((p._1.x - minX) / rangeX) * 500).asInstanceOf[Int]
       val pixelY = math.round(((p._1.y - minY) / rangeY) * 500).asInstanceOf[Int]
       if (pixelX < 500 && pixelX > 0 && pixelY < 500 && pixelY > 0) {
         values(pixelX)(pixelY)(0) += 1 //Pixel Density
-        values(pixelX)(pixelY)(1) = p._2 //(values(pixelX)(pixelY)(1) + p._2) / 2.0 //Pixel Color
+        val c = colors(math.round(p._2 * maxColorIndex).asInstanceOf[Int])
+        values(pixelX)(pixelY)(1) += c.getRed()
+	values(pixelX)(pixelY)(2) += c.getGreen()
+        values(pixelX)(pixelY)(3) += c.getBlue()
       }
       count += 1
     }
     
-    val colors = flame colors
-    
     var max = 0.0
     for (r <- 0 until 500; c <- 0 until 500) {
-      alpha(c)(r) = math.log(values(c)(r)(0)) //log of the density
-      if (alpha(c)(r) > max) {
-        max = alpha(c)(r)
+      if (values(c)(r)(0) > max) {
+        max = values(c)(r)(0)
       }
+      alpha(c)(r) = math.log(values(c)(r)(0)) //log of the density
     }
 
+    max = math.log(max)
     for (r <- 0 until 500; c <- 0 until 500) {
       alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
     }
-  
+  /*
     max = 0.0
     val recipGamma = 1.0/flame.gamma
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = values(c)(r)(1) * math.pow(alpha(c)(r), recipGamma) 
-      if (colInd > max) max = colInd
+      values(c)(r)(1) = values(c)(r)(1) * math.pow(alpha(c)(r), recipGamma)
+      values(c)(r)(2) = values(c)(r)(2) * math.pow(alpha(c)(r), recipGamma)
+      values(c)(r)(3) = values(c)(r)(3) * math.pow(alpha(c)(r), recipGamma)
+      if (values(c)(r)(1) > max) max = values(c)(r)(1)
+      if (values(c)(r)(2) > max) max = values(c)(r)(2)
+      if (values(c)(r)(3) > max) max = values(c)(r)(3)
     }
-    val maxColorIndex = flame.colors.size - 1
+    println(max)
+    */
+    val recipGamma = 1.0/flame.gamma
     for (r <- 0 until 500; c <- 0 until 500) {
-      val colInd = math.round(((values(c)(r)(1) * math.pow(alpha(c)(r),recipGamma))/max)*maxColorIndex).asInstanceOf[Int]
-      g setColor(colors(colInd))
+      g setColor(new Color(math.round((values(c)(r)(1)/values(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int],
+                           math.round((values(c)(r)(2)/values(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int],
+                           math.round((values(c)(r)(3)/values(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int]))
       g drawLine(c,r,c,r)
     }
   }

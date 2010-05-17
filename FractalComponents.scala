@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 object FractalComponents {
 
   val brain = Flame((-3,5,-4,4),
-                    4.0,
-                    BlackAndWhite(),
+                    2.0,
+                    Rainbow(),
                     scala.List[Function] (
                                           Function(0.5,
                                                    0.0,
@@ -35,11 +35,11 @@ object FractalComponents {
                                                    scala.List(linear(.5),spiral(.5)))))
   
   val perch = Flame((-.75,.5,-.85,.40),
-                    4.0,
+                    1.0,
                     Rainbow(),
                     scala.List[Function] (
                                           Function(0.5,
-                                                   1.0,
+                                                   0.0,
                                                    affineTransform(-0.611536, -0.198789, 0.308349, -0.517899, -0.28474, -0.250627),
                                                    scala.List(popcorn(1.0,-0.28474,-0.250627),rings(1.0,math.pow(-0.28474,2)))),
                                           Function(1.0,
@@ -49,10 +49,10 @@ object FractalComponents {
   
   val pinwheel = Flame((-.25,1.25,-.75,.75),
                         4.0,
-                        BlackAndWhite(),
+                        Rainbow(),
                         scala.List[Function] ( //Function list must be sorted by weights right now
                                               Function(0.5,
-                                                       0.5,
+                                                       0.0,
                                                        affineTransform(0.7158, -0.311476, -0.250535, 0.728467, 6.63E-4, 0.075547),
                                                        scala.List(linear(0.33), handkerchief(1.0))),
                                               Function(1.0,
