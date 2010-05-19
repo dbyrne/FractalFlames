@@ -21,24 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
 
-  val sample2 = Flame((-1,4,-3.5,1.5),
-                      4.0,
-                      Rainbow(),
-                      scala.List[Function] (
-                                            Function(0.333,
-                                                     0.0,
-                                                     affineTransform(-0.007287, 0.141009, -0.261044, 0.047784, 0.015346, -0.001513),
-                                                     scala.List(horseshoe(1.0))),
-                                            Function(0.666,
-                                                     0.5,
-                                                     affineTransform(0.648674, -0.556483, -0.58627, -0.238837, -0.215097, -0.075511),
-                                                     scala.List(horseshoe(1.0))),
-                                            Function(1.0,
-                                                     1.0,
-                                                     affineTransform(0.04417, -0.261728, -0.405825, 0.096763, 0.341195, -0.232007),
-                                                     scala.List(spherical(1.0)))))
+  val sample2 = Flame((-1,4,-3.5,1.5), 4.0, Rainbow(),
+                      scala.List[Function] (new Function(0.333, 0.0, (-0.007287, 0.141009, -0.261044, 0.047784, 0.015346, -0.001513)) {
+                                                         override val variations = scala.List(horseshoe(1.0))},
+                                            new Function(0.666, 0.5, (0.648674, -0.556483, -0.58627, -0.238837, -0.215097, -0.075511)) {
+                                                         override val variations = scala.List(horseshoe(1.0))},
+                                            new Function(1.0, 1.0, (0.04417, -0.261728, -0.405825, 0.096763, 0.341195, -0.232007)) {
+                                                         override val variations = scala.List(spherical(1.0))}))
 
-
+/*
   val sample1 = Flame((-7,5,-6,6),
                       1.0,
                       Rainbow(),
@@ -51,18 +42,6 @@ object FractalComponents {
                                                      1.0,
                                                      affineTransform(0.215821, 0.715917, -0.335224, -0.054829, -0.155678, -0.205658),
                                                      scala.List(linear(0.75))))) 
-  val flower = Flame((-2,2,-2.5,1.5),
-		     2.2,
-                     Rainbow(),
-                     scala.List[Function] (
-                                           Function(0.71,
-                                                    0.0,
-                                                    affineTransform(0.271587, -0.62814, 0.743008, 0.90192, 0.15938, 0.165033),
-                                                    scala.List(linear(0.6851911667585093),swirl(0.31480883324149067))),
-                                           Function(1.0,
-                                                    1.0,
-                                                    affineTransform(-0.039407, -0.385973, 0.452706, -0.055322, -0.372491, -0.62311),
-                                                    scala.List(polar(0.35591518143252265),spiral(0.6)))))
 
   val brain = Flame((-3,5,-4,4),
                     2.0,
@@ -103,7 +82,7 @@ object FractalComponents {
                                                        affineTransform(0.343091, -0.799811, 0.687143, 0.524347, 0.593742, 0.249853),
                                                        scala.List(sinusoidal(.8),horseshoe(0.2)))))
 
-
+*/
   case class Point(x:Double,y:Double) {
     def +(p:Point):Point = Point(p.x + x, p.y + y)
     def *(d:Double):Point = Point(x * d, y * d)
@@ -114,11 +93,11 @@ object FractalComponents {
     
   case class Function(weight:Double,
                       colorWeight:Double,
-                      affineFunction:(Point) => Point,
-                      variations:scala.List[(Point) => Point]) {
+                      coefficients:(Double,Double,Double,Double,Double,Double),
+                      variations:scala.List[(Point) => Point]=Nil) extends Variations {
                        
     def iterate(p:Point):Point = {
-      val tp = affineFunction(p)
+      val tp = affineTransform(p)
       variations.foldLeft(Point(0,0))(_+_(tp))
     }
     
@@ -147,64 +126,72 @@ object FractalComponents {
     } 
   }
 
-  def polar(w:Double)=(p:Point) => Point(p.arctan2/math.Pi, p.r - 1) * w
-
-  def spiral(w:Double)=(p:Point) => {
-    val recipR = 1.0 / p.r
-    Point(math.cos(p.arctan2) + math.sin(p.r),
-          math.sin(p.arctan2) - math.cos(p.r)) * recipR * w
-  }
-
-  //dependent on c and f values from affine transform
-  def popcorn(w:Double,e:Double,f:Double)=(p:Point) => {
-    Point(p.x + e * math.sin(math.tan(3 * p.y)),
-          p.y + f * math.sin(math.tan(3 *p.x))) * w
-  }
+  trait Variations {
   
-  //dependent on c^2 value from affine transform
-  def rings(w:Double, c2:Double)=(p:Point) => {
-    val m = (p.r + c2) % (2 * c2)
-    val i = ((m - c2) + p.r) - (p.r * c2)
-    Point(math.cos(p.arctan2), math.sin(p.arctan2)) * i * w
-  }
+    def coefficients:(Double,Double,Double,Double,Double,Double)
+    val (a,b,c,d,e,f) = coefficients
+    val c2 = c*c
+
+    def affineTransform(p:Point):Point = {
+      Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
+    }
+
+    def polar(w:Double)=(p:Point) => Point(p.arctan2/math.Pi, p.r - 1) * w
+
+    def spiral(w:Double)=(p:Point) => {
+      val recipR = 1.0 / p.r
+      Point(math.cos(p.arctan2) + math.sin(p.r),
+            math.sin(p.arctan2) - math.cos(p.r)) * recipR * w
+    }
+
+    //dependent on c and f values from affine transform
+    def popcorn(w:Double)=(p:Point) => {
+      Point(p.x + e * math.sin(math.tan(3 * p.y)),
+            p.y + f * math.sin(math.tan(3 *p.x))) * w
+    }
   
-  def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
+    //dependent on c^2 value from affine transform
+    def rings(w:Double)=(p:Point) => {
+      val m = (p.r + c2) % (2 * c2)
+      val i = ((m - c2) + p.r) - (p.r * c2)
+      Point(math.cos(p.arctan2), math.sin(p.arctan2)) * i * w
+    }
+  
+    def sinusoidal(w:Double)=(p:Point) => Point(math.sin(p.x),math.sin(p.y)) * w
 
-  def handkerchief(w:Double)=(p:Point) => {
-    Point(math.sin(p.arctan2 + p.r), math.cos(p.arctan2 - p.r)) * p.r * w
-  }
+    def handkerchief(w:Double)=(p:Point) => {
+      Point(math.sin(p.arctan2 + p.r), math.cos(p.arctan2 - p.r)) * p.r * w
+    }
 
-  def spherical(w:Double)=(p:Point) => {
-    val r2 = p.r2 + 1e-6
-    Point(p.x / r2,p.y / r2) * w
-  }
+    def spherical(w:Double)=(p:Point) => {
+      val r2 = p.r2 + 1e-6
+      Point(p.x / r2,p.y / r2) * w
+    }
 
-  def fisheye(w:Double)=(p:Point) => {
-    val r_comp = 2 / p.r       
-    Point(r_comp * p.y, r_comp * p.x) * w //order of x and y is reversed
-  }
+    def fisheye(w:Double)=(p:Point) => {
+      val r_comp = 2 / p.r       
+      Point(r_comp * p.y, r_comp * p.x) * w //order of x and y is reversed
+    }
 
-  def swirl(w:Double)=(p:Point) => {
-    val sr = math.sin(p.r2);
-    val cr = math.cos(p.r2);
-    Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y) * w
-  }
+    def swirl(w:Double)=(p:Point) => {
+      val sr = math.sin(p.r2);
+      val cr = math.cos(p.r2);
+      Point(sr * p.x - cr * p.y, cr * p.x + sr * p.y) * w
+    }
 
-  def horseshoe(w:Double)=(p:Point) => {
-    val c1 = math.sin(p.arctan2);
-    val c2 = math.cos(p.arctan2);
-    Point(c1*p.x - c2*p.y, c2*p.x + c1*p.y) * w
-  }
+    def horseshoe(w:Double)=(p:Point) => {
+      val c1 = math.sin(p.arctan2);
+      val c2 = math.cos(p.arctan2);
+      Point(c1*p.x - c2*p.y, c2*p.x + c1*p.y) * w
+    }
 
-  def power(w:Double)=(p:Point) => {
-    val rst = math.pow(p.r, math.sin(p.arctan2))
-    Point(math.cos(p.arctan2), math.sin(p.arctan2)) * w
-  }
+    def power(w:Double)=(p:Point) => {
+      val rst = math.pow(p.r, math.sin(p.arctan2))
+      Point(math.cos(p.arctan2), math.sin(p.arctan2)) * w
+    }
 
-  def linear(w:Double)=(p:Point) => p * w
+    def linear(w:Double)=(p:Point) => p * w
 
-  def affineTransform(a:Double,b:Double,c:Double,d:Double,e:Double,f:Double)=(p:Point) => {
-    Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
   }
   
   def loadColors(f:String):Array[Color]={
