@@ -52,8 +52,8 @@ class MyPanel extends JPanel {
   
   def render(g:Graphics, xres:Int, yres:Int) {
    
-    var alpha = Array.ofDim[Double](500,500)
-    var valFinal = Array.ofDim[Double](500,500,4)
+    var alpha = Array.ofDim[Double](500*superSampling,500*superSampling)
+    var valFinal = Array.ofDim[Double](500,500,3)
  
     val (minX, maxX, minY, maxY) = flame coords
     val rangeX = maxX - minX
@@ -78,37 +78,41 @@ class MyPanel extends JPanel {
     }
     
     var max = 0.0
+    
+    for (r <- 0 until 500 * superSampling; c <- 0 until 500 * superSampling) {
+      if (values(c)(r)(0) > max) {
+        max = values(c)(r)(0)
+      }
+      alpha(c)(r) = math.log(values(c)(r)(0)) //log of the density
+    }
+    
+    max = math.log(max)
+    for (r <- 0 until 500 * superSampling; c <- 0 until 500 * superSampling) {
+      alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
+    }
+    
+    val recipGamma = 1.0/flame.gamma
     for (r <- 0 until 500; c <- 0 until 500) {
       for (r2 <- r * superSampling until (r+1) * superSampling;
            c2 <- c * superSampling until (c+1) * superSampling) {
  
-        for (i <- 0 until 4) {
-          valFinal(c)(r)(i) += values(c2)(r2)(i)
+        for (i <- 0 until 3) {
+          valFinal(c)(r)(i) += (values(c2)(r2)(i+1)/values(c2)(r2)(0)) * math.pow(alpha(c2)(r2), recipGamma)
         }
 
       }
       
-      for (i <- 0 until 4) {
+      for (i <- 0 until 3) {
         valFinal(c)(r)(i) = valFinal(c)(r)(i) / (superSampling*superSampling)
       }      
-
-      if (valFinal(c)(r)(0) > max) {
-        max = valFinal(c)(r)(0)
-      }
-      alpha(c)(r) = math.log(valFinal(c)(r)(0)+1) //log of the density
     }
 
-    max = math.log(max+1)
-    for (r <- 0 until 500; c <- 0 until 500) {
-      alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
-    }
-
-    val recipGamma = 1.0/flame.gamma
+    
     for (r <- 0 until 500; c <- 0 until 500) {
 
-      g setColor(new Color(math.round((valFinal(c)(r)(1)/valFinal(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int],
-                           math.round((valFinal(c)(r)(2)/valFinal(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int],
-                           math.round((valFinal(c)(r)(3)/valFinal(c)(r)(0)) * math.pow(alpha(c)(r), recipGamma)).asInstanceOf[Int]))
+      g setColor(new Color(math.round(valFinal(c)(r)(0)).asInstanceOf[Int],
+                           math.round(valFinal(c)(r)(1)).asInstanceOf[Int],
+                           math.round(valFinal(c)(r)(2)).asInstanceOf[Int]))
       g drawLine(c,r,c,r)
     }
   }
