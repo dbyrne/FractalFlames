@@ -21,6 +21,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
 
+  val sample2 = Flame((-1,4,-3.5,1.5),
+                      4.0,
+                      Rainbow(),
+                      scala.List[Function] (
+                                            Function(0.333,
+                                                     0.0,
+                                                     affineTransform(-0.007287, 0.141009, -0.261044, 0.047784, 0.015346, -0.001513),
+                                                     scala.List(horseshoe(1.0))),
+                                            Function(0.666,
+                                                     0.5,
+                                                     affineTransform(0.648674, -0.556483, -0.58627, -0.238837, -0.215097, -0.075511),
+                                                     scala.List(horseshoe(1.0))),
+                                            Function(1.0,
+                                                     1.0,
+                                                     affineTransform(0.04417, -0.261728, -0.405825, 0.096763, 0.341195, -0.232007),
+                                                     scala.List(spherical(1.0)))))
+
+
+  val sample1 = Flame((-7,5,-6,6),
+                      1.0,
+                      Rainbow(),
+                      scala.List[Function] (
+                                            Function(0.5,
+                                                     0.0,
+                                                     affineTransform(-0.013021, -0.335641, 0.250371, 0.071523, -0.066408, -0.003406),
+                                                     scala.List(linear(.5),spherical(.5))),
+                                            Function(1.0,
+                                                     1.0,
+                                                     affineTransform(0.215821, 0.715917, -0.335224, -0.054829, -0.155678, -0.205658),
+                                                     scala.List(linear(0.75))))) 
   val flower = Flame((-2,2,-2.5,1.5),
 		     2.2,
                      Rainbow(),
