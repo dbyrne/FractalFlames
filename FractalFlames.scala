@@ -38,10 +38,10 @@ object FractalFlames {
 
 class MyPanel extends JPanel {
 
-  val superSampling = 2
+  val superSampling = 1
   var values = Array.ofDim[Double](500*superSampling,500*superSampling,4)
   
-  val flame = sample2
+  val flame = trout
   
   override def paintComponent(g:Graphics):Unit = {
   

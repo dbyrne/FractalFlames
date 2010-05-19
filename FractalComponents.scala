@@ -29,6 +29,12 @@ object FractalComponents {
                                             new Function(1.0, 1.0, (0.04417, -0.261728, -0.405825, 0.096763, 0.341195, -0.232007)) {
                                                          override val variations = scala.List(spherical(1.0))}))
 
+  val trout = Flame((-.75,.5,-.85,.40), 4.0, Rainbow(),
+                    scala.List[Function] (new Function(0.5, 0.0,(-0.611536, -0.198789, 0.308349, -0.517899, -0.28474, -0.250627)) {
+                                                       override val variations = scala.List(popcorn(1.0),rings(1.0))},
+                                          new Function(1.0, 1.0, (0.102329, -0.67052, 0.732627, 0.189097, 0.057882, -0.08797)) {
+                                                       override val variations = scala.List(swirl(1.0))}))
+
 /*
   val sample1 = Flame((-7,5,-6,6),
                       1.0,
@@ -56,18 +62,7 @@ object FractalComponents {
                                                    affineTransform(-0.567588, -0.536166, -0.325195, 0.801476, -0.90069, 1.08108),
                                                    scala.List(linear(.5),spiral(.5)))))
   
-  val trout = Flame((-.75,.5,-.85,.40),
-                    1.0,
-                    Rainbow(),
-                    scala.List[Function] (
-                                          Function(0.5,
-                                                   0.0,
-                                                   affineTransform(-0.611536, -0.198789, 0.308349, -0.517899, -0.28474, -0.250627),
-                                                   scala.List(popcorn(1.0,-0.28474,-0.250627),rings(1.0,math.pow(-0.28474,2)))),
-                                          Function(1.0,
-                                                   1.0,
-                                                   affineTransform(0.102329, -0.67052, 0.732627, 0.189097, 0.057882, -0.08797),
-                                                   scala.List(swirl(1.0)))))
+
   
   val pinwheel = Flame((-.25,1.25,-.75,.75),
                         4.0,
@@ -130,11 +125,9 @@ object FractalComponents {
   
     def coefficients:(Double,Double,Double,Double,Double,Double)
     val (a,b,c,d,e,f) = coefficients
-    val c2 = c*c
 
-    def affineTransform(p:Point):Point = {
-      Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
-    }
+    def affineTransform(p:Point):Point = Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
+    val e2 = e*e
 
     def polar(w:Double)=(p:Point) => Point(p.arctan2/math.Pi, p.r - 1) * w
 
@@ -144,16 +137,16 @@ object FractalComponents {
             math.sin(p.arctan2) - math.cos(p.r)) * recipR * w
     }
 
-    //dependent on c and f values from affine transform
+    //dependent on e and f values from affine transform
     def popcorn(w:Double)=(p:Point) => {
       Point(p.x + e * math.sin(math.tan(3 * p.y)),
             p.y + f * math.sin(math.tan(3 *p.x))) * w
     }
   
-    //dependent on c^2 value from affine transform
+    //dependent on e^2 value from affine transform
     def rings(w:Double)=(p:Point) => {
-      val m = (p.r + c2) % (2 * c2)
-      val i = ((m - c2) + p.r) - (p.r * c2)
+      val m = (p.r + e2) % (2 * e2)
+      val i = ((m - e2) + p.r) - (p.r * e2)
       Point(math.cos(p.arctan2), math.sin(p.arctan2)) * i * w
     }
   
