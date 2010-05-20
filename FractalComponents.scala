@@ -21,6 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
 
+  val curlSample = Flame((-4,4,-4.1,3.9), 2.00, Rainbow(),
+                         scala.List[Function] (new Function(0.5, 0.0, (0.875336, 0.199837, -0.31253, 1.260907, -0.35957, -0.703643)) {
+                                                            override val variations = scala.List(linear(0.75),curl(0.3,0.831897747766335,0.0))},
+                                               new Function(1.0, 1.0, (-0.565955, -0.119407, 0.148909, -0.513352, 0.570999, -0.684702)) {
+                                                            override val variations = scala.List(linear(0.8),spherical(.05),curl(1.0,0.831897747766335,0.0))}))
+
   val sample2 = Flame((-1,4,-3.5,1.5), 4.0, Rainbow(),
                       scala.List[Function] (new Function(0.333, 0.0, (-0.007287, 0.141009, -0.261044, 0.047784, 0.015346, -0.001513)) {
                                                          override val variations = scala.List(horseshoe(1.0))},
@@ -128,6 +134,14 @@ object FractalComponents {
 
     def affineTransform(p:Point):Point = Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
     val e2 = e*e
+
+    //Parametric variation  
+    def curl(w:Double, c1:Double, c2:Double)=(p:Point) => {
+      val t1 = 1 + c1*p.x + c2*(p.x*p.x - p.y*p.y)
+      val t2 = c1*p.y + 2*c2*p.x*p.y
+      val t3 = 1 / (t1*t1 + t2*t2)
+      Point(t1*p.x + t2*p.y, t1*p.y - t2*p.x) * t3 * w
+    }
 
     def polar(w:Double)=(p:Point) => Point(p.arctan2/math.Pi, p.r - 1) * w
 
