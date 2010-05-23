@@ -41,6 +41,12 @@ object FractalComponents {
                                           new Function(1.0, 1.0, (0.102329, -0.67052, 0.732627, 0.189097, 0.057882, -0.08797)) {
                                                        override val variations = scala.List(swirl(1.0))}))
 
+  val brain = Flame((-3,5,-4,4), 2.0, Rainbow(),
+                    scala.List[Function] (new Function(0.5, 0.0, (1.015245, -1.466244, 2.361193, 1.471095, -0.128157, 1.185009)) {
+                                                       override val variations = scala.List(linear(.5),spiral(.5))},
+                                          new Function(1.0, 1.0, (-0.567588, -0.536166, -0.325195, 0.801476, -0.90069, 1.08108)) {
+                                                       override val variations = scala.List(linear(.5),spiral(.5))}))
+
 /*
   val sample1 = Flame((-7,5,-6,6),
                       1.0,
@@ -54,20 +60,6 @@ object FractalComponents {
                                                      1.0,
                                                      affineTransform(0.215821, 0.715917, -0.335224, -0.054829, -0.155678, -0.205658),
                                                      scala.List(linear(0.75))))) 
-
-  val brain = Flame((-3,5,-4,4),
-                    2.0,
-                    Rainbow(),
-                    scala.List[Function] (
-                                          Function(0.5,
-                                                   0.0,
-                                                   affineTransform(1.015245, -1.466244, 2.361193, 1.471095, -0.128157, 1.185009),
-                                                   scala.List(linear(.5),spiral(.5))),
-                                          Function(1.0,
-                                                   1.0,
-                                                   affineTransform(-0.567588, -0.536166, -0.325195, 0.801476, -0.90069, 1.08108),
-                                                   scala.List(linear(.5),spiral(.5)))))
-  
 
   
   val pinwheel = Flame((-.25,1.25,-.75,.75),
