@@ -3,6 +3,7 @@ import java.awt.Graphics
 import javax.swing._
 import scala.util.Random
 import FractalComponents._
+import SampleFlames._
 
 /*
 Copyright (C) 2010 David Byrne
