@@ -20,6 +20,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object SampleFlames {
 
+  val bubbleSample = Flame((-1.75,0.75,-1.5,1.0), 3.25, Rainbow(),
+                           scala.List[Function] (new Function(0.5, 0.0, (-0.559531, -0.253265, 0.253265, -0.559531, -0.187406, -0.073585)) {
+                                                              override val variations = scala.List(linear(.2),bubble(.8))},
+                                                 new Function(1.0, 1.0, (0.85214, -0.139685, -0.139686, -0.85214, -0.487627, -0.358286)) {
+                                                              override val variations =  scala.List(linear(.2),spherical(.8))}))
+
   val julianSample = Flame((-2,2,-2,2), 4.00, Rainbow(),
                            scala.List[Function] (new Function(0.5, 0.0, (0.259446, 0.0972, 0.156567, -0.260863, 0.1, 0.0)) {
                                                               override val variations = scala.List(rings(1.0))},

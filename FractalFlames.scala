@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 object FractalFlames {
 
   def main(args: Array[String]){
-    val renderer=new Renderer(1000,1000)
+    val renderer=new Renderer(1500,1500)
     while (true) {
       renderer.render()
     }
@@ -40,7 +40,7 @@ class Renderer(xres:Int,yres:Int) {
   val superSampling = 2
   var values = Array.ofDim[Double](xres*superSampling,yres*superSampling,4)
   
-  val flame = curlSample
+  val flame = bubbleSample
   
   def render() {
    

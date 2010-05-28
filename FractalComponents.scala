@@ -84,6 +84,11 @@ object FractalComponents {
       Point(math.cos(t), math.sin(t)) * rp * w
     }
 
+    def bubble(w:Double)=(p:Point) => {
+      val b = 4/(p.r2 + 4)
+      Point(p.x,p.y) * b * w
+    }
+
     //Parametric variation  
     def curl(w:Double, c1:Double, c2:Double)=(p:Point) => {
       val t1 = 1 + c1*p.x + c2*(p.x*p.x - p.y*p.y)
