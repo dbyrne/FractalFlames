@@ -1,6 +1,8 @@
-import scala.swing._
-import java.awt.Graphics
-import javax.swing._
+import java.awt.image.BufferedImage
+import java.awt.Color
+import javax.imageio.ImageIO
+import java.io.File
+import java.io.IOException
 import scala.util.Random
 import FractalComponents._
 import SampleFlames._
@@ -26,35 +28,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 object FractalFlames {
 
   def main(args: Array[String]){
-    val frame=new JFrame("Fractal Flames")
-    val panel=new MyPanel()
-    frame add panel
-    frame setSize (500, 500)
-    frame setVisible true
+    val renderer=new Renderer(1000,1000)
     while (true) {
-      panel repaint()
+      renderer.render()
     }
   }
 }
 
-class MyPanel extends JPanel {
+class Renderer(xres:Int,yres:Int) {
 
-  val superSampling = 3
-  var values = Array.ofDim[Double](500*superSampling,500*superSampling,4)
+  val superSampling = 2
+  var values = Array.ofDim[Double](xres*superSampling,yres*superSampling,4)
   
-  val flame = brain
+  val flame = curlSample
   
-  override def paintComponent(g:Graphics):Unit = {
-  
-    super.paintComponent(g)
-    render(g, getWidth(), this.getHeight())
-  
-  }
-  
-  def render(g:Graphics, xres:Int, yres:Int) {
+  def render() {
    
-    var alpha = Array.ofDim[Double](500*superSampling,500*superSampling)
-    var valFinal = Array.ofDim[Double](500,500,3)
+    var alpha = Array.ofDim[Double](xres*superSampling,yres*superSampling)
+    var valFinal = Array.ofDim[Double](xres,yres,3)
  
     val (minX, maxX, minY, maxY) = flame coords
     val rangeX = maxX - minX
@@ -66,9 +57,9 @@ class MyPanel extends JPanel {
 
     while (count < 1000000) {
       val p = flame.points.next()
-      val pixelX = math.round(((p._1.x - minX) / rangeX) * 500 * superSampling).asInstanceOf[Int]
-      val pixelY = math.round(((p._1.y - minY) / rangeY) * 500 * superSampling).asInstanceOf[Int]
-      if (pixelX < 500 * superSampling && pixelX > 0 && pixelY < 500 * superSampling && pixelY > 0) {
+      val pixelX = math.round(((p._1.x - minX) / rangeX) * xres * superSampling).asInstanceOf[Int]
+      val pixelY = math.round(((p._1.y - minY) / rangeY) * yres * superSampling).asInstanceOf[Int]
+      if (pixelX < xres * superSampling && pixelX > 0 && pixelY < yres * superSampling && pixelY > 0) {
         values(pixelX)(pixelY)(0) += 1 //Pixel Density
         val c = colors(math.round(p._2 * maxColorIndex).asInstanceOf[Int])
         values(pixelX)(pixelY)(1) += c.getRed()
@@ -80,7 +71,7 @@ class MyPanel extends JPanel {
     
     var max = 0.0
     
-    for (r <- 0 until 500 * superSampling; c <- 0 until 500 * superSampling) {
+    for (r <- 0 until yres * superSampling; c <- 0 until xres * superSampling) {
       if (values(c)(r)(0) > max) {
         max = values(c)(r)(0)
       }
@@ -88,12 +79,12 @@ class MyPanel extends JPanel {
     }
     
     max = math.log(max)
-    for (r <- 0 until 500 * superSampling; c <- 0 until 500 * superSampling) {
+    for (r <- 0 until yres * superSampling; c <- 0 until xres * superSampling) {
       alpha(c)(r) = alpha(c)(r) / max //replace log density with alpha values
     }
     
     val recipGamma = 1.0/flame.gamma
-    for (r <- 0 until 500; c <- 0 until 500) {
+    for (r <- 0 until yres; c <- 0 until xres) {
       for (r2 <- r * superSampling until (r+1) * superSampling;
            c2 <- c * superSampling until (c+1) * superSampling) {
  
@@ -107,15 +98,22 @@ class MyPanel extends JPanel {
         valFinal(c)(r)(i) = valFinal(c)(r)(i) / (superSampling*superSampling)
       }      
     }
+ 
+    val bImage = new BufferedImage(xres, yres, BufferedImage.TYPE_INT_RGB) 
 
-    
-    for (r <- 0 until 500; c <- 0 until 500) {
+    for (r <- 0 until yres; c <- 0 until xres) {
 
-      g setColor(new Color(math.round(valFinal(c)(r)(0)).asInstanceOf[Int],
+      val color = new Color(math.round(valFinal(c)(r)(0)).asInstanceOf[Int],
                            math.round(valFinal(c)(r)(1)).asInstanceOf[Int],
-                           math.round(valFinal(c)(r)(2)).asInstanceOf[Int]))
-      g drawLine(c,r,c,r)
+                           math.round(valFinal(c)(r)(2)).asInstanceOf[Int])
+      bImage.setRGB(c, r, color.getRGB)
+    }
+
+    try {
+      val outputfile = new File("saved.png")
+      ImageIO.write(bImage, "png", outputfile)
+    } catch {
+      case e:IOException => println("Could not save image")
     }
   }
-  
 }

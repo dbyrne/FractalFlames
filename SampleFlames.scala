@@ -19,6 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 object SampleFlames {
+
+  val julianSample = Flame((-2,2,-2,2), 4.00, Rainbow(),
+                           scala.List[Function] (new Function(0.5, 0.0, (0.259446, 0.0972, 0.156567, -0.260863, 0.1, 0.0)) {
+                                                              override val variations = scala.List(rings(1.0))},
+                                                 new Function(1.0, 1.0, (0.397296, -0.334164, 0.006008, 0.489671, 0.006868, -0.351789)) {
+                                                              override val variations =  scala.List(julian(1.0,4.0,-1.16))}))
+
   val curlSample = Flame((-4,4,-4.1,3.9), 2.00, Rainbow(),
                          scala.List[Function] (new Function(0.5, 0.0, (0.875336, 0.199837, -0.31253, 1.260907, -0.35957, -0.703643)) {
                                                             override val variations = scala.List(linear(0.75),curl(0.3,0.831897747766335,0.0))},

@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 object FractalComponents {
 
+  val psi = 3.359885666
+
   case class Point(x:Double,y:Double) {
     def +(p:Point):Point = Point(p.x + x, p.y + y)
     def *(d:Double):Point = Point(x * d, y * d)
@@ -73,6 +75,14 @@ object FractalComponents {
 
     def affineTransform(p:Point):Point = Point(a * p.x + c * p.y + e,b * p.x + d * p.y + f)
     val e2 = e*e
+
+    //Parametric variation
+    def julian(w:Double, p1:Double, p2:Double)=(p:Point) => {
+      val p3 = math.floor(math.abs(p1) * psi)
+      val t = (math.atan2(p.y,p.x) + 2*math.Pi*p3)/p1
+      val rp = math.pow(p.r,p2/p1)
+      Point(math.cos(t), math.sin(t)) * rp * w
+    }
 
     //Parametric variation  
     def curl(w:Double, c1:Double, c2:Double)=(p:Point) => {
